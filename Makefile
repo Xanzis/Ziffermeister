@@ -1,6 +1,6 @@
 CC = gcc
 RM = rm
-MODS = lib/playfair.c lib/shift.c lib/railfence.c lib/vigenere.c lib/autokey.c lib/beaufort.c lib/porta.c lib/atbash.c
+MODS = lib/playfair.c lib/shift.c lib/railfence.c lib/vigenere.c lib/autokey.c lib/beaufort.c lib/porta.c lib/atbash.c lib/columnar.c
 
 all: zmstr
 

@@ -16,6 +16,7 @@
 #include "lib/beaufort.h"
 #include "lib/porta.h"
 #include "lib/atbash.h"
+#include "lib/columnar.h"
 
 #include "lib/analysis.h"
 
@@ -27,16 +28,16 @@
 // Cypher definitions - woo modularity!
 
 /*
-char* CYPHERS[] = {"shift", "playfair", "railfence", "vigenere", "autokey", "beaufort", "porta". "atbash", NULL};
-int KEY_TYPES[] = {NUM_KEY, STR_KEY, NUM_KEY, STR_KEY, STR_KEY, STR_KEY, STR_KEY, NUM_KEY};
-char* (*ENC_FUNCS[])(char*, char*) = {SH_encode, PF_encode, RF_encode, VG_encode, AK_encode, BF_encode, PT_encode, AT_encode};
-char* (*DEC_FUNCS[])(char*, char*) = {SH_decode, PF_decode, RF_decode, VG_decode, AK_decode, BF_decode, PT_decode, AT_decode};
+char* CYPHERS[] = {"shift", "playfair", "railfence", "vigenere", "autokey", "beaufort", "porta", "atbash", "columnar", NULL};
+int KEY_TYPES[] = {NUM_KEY, STR_KEY, NUM_KEY, STR_KEY, STR_KEY, STR_KEY, STR_KEY, NUM_KEY, STR_KEY};
+char* (*ENC_FUNCS[])(char*, char*) = {SH_encode, PF_encode, RF_encode, VG_encode, AK_encode, BF_encode, PT_encode, AT_encode, CO_encode};
+char* (*DEC_FUNCS[])(char*, char*) = {SH_decode, PF_decode, RF_decode, VG_decode, AK_decode, BF_decode, PT_decode, AT_decode, CO_decode};
 */
 
-char* CYPHERS[] = {"shift", "playfair", "railfence", "vigenere", "atbash", NULL};
-int KEY_TYPES[] = {NUM_KEY, STR_KEY, NUM_KEY, STR_KEY, NUM_KEY};
-char* (*ENC_FUNCS[])(char*, char*) = {SH_encode, PF_encode, RF_encode, VG_encode, AT_encode};
-char* (*DEC_FUNCS[])(char*, char*) = {SH_decode, PF_decode, RF_decode, VG_decode, AT_decode};
+char* CYPHERS[] = {"shift", "playfair", "railfence", "vigenere", "atbash", "columnar", NULL};
+int KEY_TYPES[] = {NUM_KEY, STR_KEY, NUM_KEY, STR_KEY, NUM_KEY, STR_KEY};
+char* (*ENC_FUNCS[])(char*, char*) = {SH_encode, PF_encode, RF_encode, VG_encode, AT_encode, CO_encode};
+char* (*DEC_FUNCS[])(char*, char*) = {SH_decode, PF_decode, RF_decode, VG_decode, AT_decode, CO_decode};
 
 
 // Key definitions
