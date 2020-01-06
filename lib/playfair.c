@@ -20,7 +20,7 @@ struct PF_pair {
 char PF_s[25];
 char* PF_square[] = {PF_s, PF_s + 5, PF_s + 10, PF_s + 15, PF_s + 20};
 PF_coor PF_coor_lookup[26];
-int PF_idx_lookup[25];
+int PF_idx_lookup[26];
 
 void playfairerror(char* error_text) {
 	printf("Critical error in playfair.c\nError message follows:\n");

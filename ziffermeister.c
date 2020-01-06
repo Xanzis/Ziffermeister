@@ -6,7 +6,7 @@
 #include <float.h>
 #include <math.h>
 
-// Cypher includes
+// cipher includes
 
 #include "lib/shift.h"
 #include "lib/playfair.h"
@@ -17,6 +17,7 @@
 #include "lib/porta.h"
 #include "lib/atbash.h"
 #include "lib/columnar.h"
+#include "lib/shuffle.h"
 
 #include "lib/analysis.h"
 
@@ -25,33 +26,33 @@
 #define STR_KEY 1
 #define NUM_KEY 2
 
-// Cypher definitions - woo modularity!
+// cipher definitions - woo modularity!
 
-/*
-char* CYPHERS[] = {"shift", "playfair", "railfence", "vigenere", "autokey", "beaufort", "porta", "atbash", "columnar", NULL};
-int KEY_TYPES[] = {NUM_KEY, STR_KEY, NUM_KEY, STR_KEY, STR_KEY, STR_KEY, STR_KEY, NUM_KEY, STR_KEY};
-char* (*ENC_FUNCS[])(char*, char*) = {SH_encode, PF_encode, RF_encode, VG_encode, AK_encode, BF_encode, PT_encode, AT_encode, CO_encode};
-char* (*DEC_FUNCS[])(char*, char*) = {SH_decode, PF_decode, RF_decode, VG_decode, AK_decode, BF_decode, PT_decode, AT_decode, CO_decode};
-*/
+// char* CIPHERS[] = {"shift", "playfair", "railfence", "vigenere", "autokey", "beaufort", "porta", "atbash", "columnar", "shuffle", NULL};
+// int KEY_TYPES[] = {NUM_KEY, STR_KEY, NUM_KEY, STR_KEY, STR_KEY, STR_KEY, STR_KEY, NUM_KEY, STR_KEY, STR_KEY};
+// char* (*ENC_FUNCS[])(char*, char*) = {SH_encode, PF_encode, RF_encode, VG_encode, AK_encode, BF_encode, PT_encode, AT_encode, CO_encode, SU_encode};
+// char* (*DEC_FUNCS[])(char*, char*) = {SH_decode, PF_decode, RF_decode, VG_decode, AK_decode, BF_decode, PT_decode, AT_decode, CO_decode, SU_decode};
 
-char* CYPHERS[] = {"shift", "playfair", "railfence", "vigenere", "atbash", "columnar", NULL};
-int KEY_TYPES[] = {NUM_KEY, STR_KEY, NUM_KEY, STR_KEY, NUM_KEY, STR_KEY};
-char* (*ENC_FUNCS[])(char*, char*) = {SH_encode, PF_encode, RF_encode, VG_encode, AT_encode, CO_encode};
-char* (*DEC_FUNCS[])(char*, char*) = {SH_decode, PF_decode, RF_decode, VG_decode, AT_decode, CO_decode};
+// char* CIPHERS[] = {"shift", "playfair", "railfence", "vigenere", "atbash", "columnar", "shuffle", NULL};
+// int KEY_TYPES[] = {NUM_KEY, STR_KEY, NUM_KEY, STR_KEY, NUM_KEY, STR_KEY, STR_KEY};
+// char* (*ENC_FUNCS[])(char*, char*) = {SH_encode, PF_encode, RF_encode, VG_encode, AT_encode, CO_encode, SU_encode};
+// char* (*DEC_FUNCS[])(char*, char*) = {SH_decode, PF_decode, RF_decode, VG_decode, AT_decode, CO_decode, SU_decode};
 
+char* CIPHERS[] = {"shift", "playfair", "vigenere", "shuffle", NULL};
+int KEY_TYPES[] = {NUM_KEY, STR_KEY, STR_KEY, STR_KEY};
+char* (*ENC_FUNCS[])(char*, char*) = {SH_encode, PF_encode, VG_encode, SU_encode};
+char* (*DEC_FUNCS[])(char*, char*) = {SH_decode, PF_decode, VG_decode, SU_decode};
 
 // Key definitions
 
 char* ZF_key_data;
 char** ZF_key_locs;
 int ZF_key_count;
+int ZF_num_key_count;
 
-/*
 char* ZF_num_keys[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", NULL};
-int ZF_num_key_count = 26;
-*/
-char* ZF_num_keys[] = {"3", "4", "5", "12", NULL};
-int ZF_num_key_count = 4;
+
+// char* ZF_num_keys[] = {"3", "4", "5", "12", "11", "2", "6", NULL};
 
 // Pointer to input text
 
@@ -78,7 +79,7 @@ char sanitize_char(char a) {
 
 int num_funcs() {
 	int i = 0;
-	while (CYPHERS[++i]);
+	while (CIPHERS[++i]);
 	return i;
 }
 
@@ -103,6 +104,9 @@ void load_key_file(char* k) {
 		strcpy(ZF_key_data, k);
 		ZF_key_locs[0] = ZF_key_data;
 		ZF_key_locs[1] = NULL;
+		ZF_key_count = 1;
+		ZF_num_key_count = 0;
+		for (int i = 0; ZF_num_keys[i]; i++) ZF_num_key_count++;
 		return;
 	}
 
@@ -146,6 +150,10 @@ void load_key_file(char* k) {
 	}
 	ZF_key_locs[locs_i] = NULL;
 	ZF_key_count = locs_i;
+
+	// finish up by counting the numerical keys
+	ZF_num_key_count = 0;
+	for (int i = 0; ZF_num_keys[i]; i++) ZF_num_key_count++;
 }
 
 void free_keys() {
@@ -182,6 +190,16 @@ void load_text(char* t) {
 
 	ZF_text[text_idx] = '\0';
 	printf("Text:\n%s\n", ZF_text);
+}
+
+long int multiplicity(int n) {
+	// returns the number of possible cipher/key combinations for n steps
+	int count = 0;
+	for (int func_num = 0; CIPHERS[func_num]; func_num++) {
+		if (KEY_TYPES[func_num] == STR_KEY) count += ZF_key_count;
+		else if (KEY_TYPES[func_num] == NUM_KEY) count += ZF_num_key_count;
+	}
+	return (long int) pow(count, n);
 }
 
 float score_result(char* str) {
@@ -246,8 +264,8 @@ char* run_one_basic(char* (*f)(char*, char*), char* text, char* key, int ext, in
 }
 
 void run_all() {
-	for (int func_num = 0; CYPHERS[func_num]; func_num++) {
-		printf("Running cypher %s ...\n", CYPHERS[func_num]);
+	for (int func_num = 0; CIPHERS[func_num]; func_num++) {
+		printf("Running cipher %s ...\n", CIPHERS[func_num]);
 
 		if (KEY_TYPES[func_num] == STR_KEY) {
 			for (int k = 0; ZF_key_locs[k]; k++) run_one(DEC_FUNCS[func_num], ZF_key_locs[k], 1, 1);
@@ -256,93 +274,6 @@ void run_all() {
 			for (int k = 0; ZF_num_keys[k]; k++) run_one(DEC_FUNCS[func_num], ZF_num_keys[k], 1, 1);
 		}
 	}
-	for (int i = 0; i < 10; i++) printf("Result #%d: %s score %f\n", i, ZF_results[i], ZF_scores[i]);
-}
-
-void run_all_2n() {
-	for (int func1 = 0; CYPHERS[func1]; func1++) {
-		if (KEY_TYPES[func1] == NUM_KEY) {
-			for (int i = 0; i < ZF_num_key_count; i++) {
-				run_one_basic(DEC_FUNCS[func1], ZF_text, ZF_num_keys[i], 1, 1);
-				// stores output in ZF_result
-				for (int func2 = 0; CYPHERS[func2]; func2++) {
-					if (KEY_TYPES[func2] == NUM_KEY) {
-						for (int j = 1; j < ZF_num_key_count; j++) {
-							run_one_basic(DEC_FUNCS[func2], ZF_result, ZF_num_keys[j], 0, 1);
-						}
-					}
-				}
-			}
-		}
-	}
-	for (int i = 0; i < 10; i++) printf("Result #%d: %s score %f\n", i, ZF_results[i], ZF_scores[i]);
-}
-
-void run_all_2h() {
-	int limit1, limit2;
-	char* keya,* keyb;
-	char* out;
-
-	for (int func1 = 0; CYPHERS[func1]; func1++) {
-		limit1 = (KEY_TYPES[func1] == STR_KEY) ? ZF_key_count : ZF_num_key_count;
-		printf("Running primary cypher <%s> ...\n", CYPHERS[func1]);
-		for (int i = 0; i < limit1; i++) {
-			if (KEY_TYPES[func1] == STR_KEY) keya = ZF_key_locs[i];
-			else                             keya = ZF_num_keys[i];
-			run_one_basic(DEC_FUNCS[func1], ZF_text, keya, 1, 1);
-
-			for (int func2 = 0; CYPHERS[func2]; func2++) {
-				if (KEY_TYPES[func1] != KEY_TYPES[func2]) {
-					limit2 = (KEY_TYPES[func2] == STR_KEY) ? ZF_key_count : ZF_num_key_count;
-					for (int j = 0; j < limit2; j++) {
-						if (KEY_TYPES[func2] == STR_KEY) keyb = ZF_key_locs[j];
-						else                             keyb = ZF_num_keys[j];
-						out = run_one_basic(DEC_FUNCS[func2], ZF_result, keyb, 0, 0);
-						if (ZF_logged) {
-							printf("   Logged: cypher <%12s> keys <%20s><%20s> result %s\n", CYPHERS[func2], keya, keyb, out);
-						}
-						free(out);
-					}
-				}
-			}
-		}
-	}
-
-	printf("\n");
-	for (int i = 0; i < 10; i++) printf("Result #%d: %s score %f\n", i, ZF_results[i], ZF_scores[i]);
-}
-
-void run_all_2a() {
-	int limit1, limit2;
-	char* keya,* keyb;
-	char* out;
-
-	for (int func1 = 0; CYPHERS[func1]; func1++) {
-		limit1 = (KEY_TYPES[func1] == STR_KEY) ? ZF_key_count : ZF_num_key_count;
-		printf("Running primary cypher <%s> ...\n", CYPHERS[func1]);
-		for (int i = 0; i < limit1; i++) {
-			if (KEY_TYPES[func1] == STR_KEY) keya = ZF_key_locs[i];
-			else                             keya = ZF_num_keys[i];
-			run_one_basic(DEC_FUNCS[func1], ZF_text, keya, 1, 1);
-
-			for (int func2 = 0; CYPHERS[func2]; func2++) {
-				limit2 = (KEY_TYPES[func2] == STR_KEY) ? ZF_key_count : ZF_num_key_count;
-
-				for (int j = 0; j < limit2; j++) {
-					if (KEY_TYPES[func2] == STR_KEY) keyb = ZF_key_locs[j];
-					else                             keyb = ZF_num_keys[j];
-					out = run_one_basic(DEC_FUNCS[func2], ZF_result, keyb, 0, 0);
-
-					if (ZF_logged) {
-						printf("   Logged: cypher <%10s> keys <%15s><%15s> result %s\n", CYPHERS[func2], keya, keyb, out);
-					}
-					free(out);
-				}
-			}
-		}
-	}
-
-	printf("\n");
 	for (int i = 0; i < 10; i++) printf("Result #%d: %s score %f\n", i, ZF_results[i], ZF_scores[i]);
 }
 
@@ -361,17 +292,16 @@ void run_all_n(int n) {
 	char* k;
 
 	int f_total = num_funcs();
+	long int to_run = multiplicity(n);
+	long int division = to_run / 40;
+	long int ran = 0;
+	printf("Running %d layers of ciphers, %ld combinations in total ...\n\n", n, to_run);
+	for (int i = 0; i < 40; i++) printf("|");
+	printf("\n");
 
 	int carry = 0;
 
-	for (int i = 0; i < n; i++) {
-		limits[i] = func_limit(funcs[i]);
-		// redundant I know but this is a foolproof intialization
-	}
-
-	// Strategy - recompute as little as possible. Cycle through all keys then function of lowest layer,
-	//     Carrying upwards when the functions roll over. Recompute variable shows the most significant
-	//     string that needs recomputing.
+	for (int i = 0; i < n; i++) limits[i] = func_limit(funcs[i]);
 
 	while (!carry) {
 		// compute to the second-to-last decrypt
@@ -394,20 +324,21 @@ void run_all_n(int n) {
 		// compute the final decode
 		k = get_key(funcs[recompute], k_idxs[recompute]);
 		out = run_one_basic(DEC_FUNCS[funcs[n-1]], inter[n - 2], k, 0, 0);
-		if (ZF_logged) {
-			printf("Logged: %s\n   From: ", out);
-			for (int i = 0; i < n; i++) {
-				printf("%2d f:<%s>k:<%s> ", i, CYPHERS[funcs[i]], get_key(funcs[i], k_idxs[i]));
-			}
-			printf("\n");
-		}
+
+		// if (ZF_logged) {
+		// 	printf("Logged: %s\n   From: ", out);
+		// 	for (int i = 0; i < n; i++) {
+		// 		printf("%2d f:<%s>k:<%s> ", i, cipherS[funcs[i]], get_key(funcs[i], k_idxs[i]));
+		// 	}
+		// 	printf("\n");
+		// }
+
 		free(out);
 
 		//increment and set recomputes
 		carry = 1;
 		
 		for (int i = n-1; i >= 0; i--) {
-			// carry into key increments
 			if (carry) {
 				k_idxs[i]++;
 				recompute = i;
@@ -431,7 +362,10 @@ void run_all_n(int n) {
 				limits[i] = func_limit(funcs[i]);
 			}
 		}
-		// uhhh that should be it. If that loop ends with carry = 1 the while loop wil end.
+
+		// Add to the progress meter
+		int abc;
+		if (!(ran++ % division)) abc = write(0, ".", 1);
 	}
 
 	printf("\n");
@@ -440,7 +374,7 @@ void run_all_n(int n) {
 
 void run_func(int func_num, int mode) {
 	for (int k = 0; ZF_key_locs[k]; k++) {
-		printf("\nRunning cypher <%s> with key <%s> ...\n", CYPHERS[func_num], ZF_key_locs[k]);
+		printf("\nRunning cipher <%s> with key <%s> ...\n", CIPHERS[func_num], ZF_key_locs[k]);
 		if (mode) run_one(ENC_FUNCS[func_num], ZF_key_locs[k], 0, 1);
 		else run_one(DEC_FUNCS[func_num], ZF_key_locs[k], 0, 1);
 	}
@@ -448,53 +382,41 @@ void run_func(int func_num, int mode) {
 
 int main(int argc, char *argv[]) {
 	if (argc == 1) {
-		printf("Usage: zmstr c t k (m)\n   c: the cypher to be used. zmstr runall t k will run all available cyphers\n   t: the filename of the plaintext/cyphertext file\n   k: either a key or a file containing a newline-seperated list of keys\n   m: encryption or decryption ('e'/'d') - do not use with runall\n");
+		printf("Usage: zmstr c t k (m)\n   c: the cipher to be used. zmstr runall t k will run all available ciphers\n   t: the filename of the plaintext/ciphertext file\n   k: either a key or a file containing a newline-seperated list of keys\n   m: encryption or decryption ('e'/'d') - do not use with runall\n");
 		ziffermeistererror("OUT OF CHEESE ERROR PLEASE REBOOT FROM START");
 	}
-
-	if (strcmp(argv[0], "./zmstr")) ziffermeistererror("you blithering fool, you compiled to the wrong name");
+	//if (strcmp(argv[0], "./zmstr")) ziffermeistererror("you blithering fool, you compiled to the wrong name");
 	if (argc < 4) ziffermeistererror("Incorrect number of arguments supplied");
 	
 	load_text(argv[2]);
 	printf("Text loaded\n");
 	load_key_file(argv[3]);
-	printf("Key(s) loaded\n");
+	printf("Key(s) loaded: %d str %d num\n", ZF_key_count, ZF_num_key_count);
 	for (int i = 0; i < 10; i++) memset(ZF_results[i], '\0', 1024);
 
-	char* result;
-	float score;
-
-	// 1st argument runall runs every cypher with every key on the supplied text
+	// 1st argument runall runs every cipher with every key on the supplied text
 	if (!strcmp(argv[1], "runall")) run_all();
 
-	// runall-2n runs two layers of every numerical cypher with every key
-	else if (!strcmp(argv[1], "runall-2n")) run_all_2n();
-
-	// runall-2h runs every str/num or num/str two-layer cypher pairing
-	else if (!strcmp(argv[1], "runall-2h")) run_all_2h();
-
-	// runall-2a runs every two-layer cypher pairing
-	else if (!strcmp(argv[1], "runall-2a")) run_all_2a();
-
-	// same thing but 4
+	// running all multi-layer pairings
+	else if (!strcmp(argv[1], "runall-2")) run_all_n(2);
+	else if (!strcmp(argv[1], "runall-3")) run_all_n(3);
 	else if (!strcmp(argv[1], "runall-4")) run_all_n(4);
 
-	// Any other 1st argument - searches for a cypher with that title and runs it
+	// Any other 1st argument - searches for a cipher with that title and runs it
 	else {
 		if (argc != 5) ziffermeistererror("Incorrect number of arguments supplied");
 		// Find the function number
 		int func_num = 0;
-		while (strcmp(argv[1], CYPHERS[func_num])) {
+		while (strcmp(argv[1], CIPHERS[func_num])) {
 			func_num++;
-			if(!CYPHERS[func_num]) ziffermeistererror("requested cypher is not supported");
+			if(!CIPHERS[func_num]) ziffermeistererror("requested cipher is not supported");
 		}
-		printf("Cypher identified (funcnum %d)\n", func_num);
+		printf("cipher identified (funcnum %d)\n", func_num);
 		run_func(func_num, (argv[4][0] == 'e') ? 1 : 0 );
 	}
 
 	free(ZF_text);
 	free_keys();
 	if (ZF_result) free(ZF_result);
-
 	return 1;
 }
