@@ -149,8 +149,12 @@ char* PF_decode(char* enc, char* key) {
 	build_square(key);
 	//print_square(square);
 
+	char* inter = (char *) malloc((strlen(enc) + 2) * sizeof (char));
+	memset(inter, '\0', (strlen(enc) + 2));
 	char* res = (char *) malloc((strlen(enc) + 2) * sizeof (char));
 	memset(res, '\0', (strlen(enc) + 2));
+
+	// inter holds the output before Xs between duplicate letters have been removed
 
 	PF_pair cur_pair, res_pair;
 
@@ -163,12 +167,20 @@ char* PF_decode(char* enc, char* key) {
 		else cur_pair.b = enc[i + 1];
 
 		res_pair = run_pair(cur_pair, -1);
-		res[i] = res_pair.a;
-		res[i + 1] = res_pair.b;
+		inter[i] = res_pair.a;
+		inter[i + 1] = res_pair.b;
 
-		if (!enc[i + 1]) good = 0;
-		else if (!enc[i + 2]) good = 0;
-		i += 2;
+		if (enc[i + 1] && enc[i + 2]) {
+			i += 2;
+		}
+		else good = 0;
+	}
+
+	// filter out any x between two identical characters
+	res[0] = inter[0];
+	int res_idx = 1;
+	for (int j = 1; j < (i + 1); j++) {
+		if (!((inter[j] == 'x') && (inter[j - 1] == inter[j + 1]))) res[res_idx++] = inter[j];
 	}
 
 	return res;
