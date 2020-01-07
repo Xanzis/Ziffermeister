@@ -18,6 +18,7 @@
 #include "lib/atbash.h"
 #include "lib/columnar.h"
 #include "lib/shuffle.h"
+#include "lib/trifid.h"
 
 #include "lib/analysis.h"
 
@@ -28,20 +29,15 @@
 
 // cipher definitions - woo modularity!
 
-// char* CIPHERS[] = {"shift", "playfair", "railfence", "vigenere", "autokey", "beaufort", "porta", "atbash", "columnar", "shuffle", NULL};
-// int KEY_TYPES[] = {NUM_KEY, STR_KEY, NUM_KEY, STR_KEY, STR_KEY, STR_KEY, STR_KEY, NUM_KEY, STR_KEY, STR_KEY};
-// char* (*ENC_FUNCS[])(char*, char*) = {SH_encode, PF_encode, RF_encode, VG_encode, AK_encode, BF_encode, PT_encode, AT_encode, CO_encode, SU_encode};
-// char* (*DEC_FUNCS[])(char*, char*) = {SH_decode, PF_decode, RF_decode, VG_decode, AK_decode, BF_decode, PT_decode, AT_decode, CO_decode, SU_decode};
+// char* CIPHERS[] = {"shift", "playfair", "railfence", "vigenere", "autokey", "beaufort", "porta", "atbash", "columnar", "shuffle", "trifid", NULL};
+// int KEY_TYPES[] = {NUM_KEY, STR_KEY, NUM_KEY, STR_KEY, STR_KEY, STR_KEY, STR_KEY, NUM_KEY, STR_KEY, STR_KEY, STR_KEY};
+// char* (*ENC_FUNCS[])(char*, char*) = {SH_encode, PF_encode, RF_encode, VG_encode, AK_encode, BF_encode, PT_encode, AT_encode, CO_encode, SU_encode, TR_encode};
+// char* (*DEC_FUNCS[])(char*, char*) = {SH_decode, PF_decode, RF_decode, VG_decode, AK_decode, BF_decode, PT_decode, AT_decode, CO_decode, SU_decode, TR_decode};
 
-// char* CIPHERS[] = {"shift", "playfair", "railfence", "vigenere", "atbash", "columnar", "shuffle", NULL};
-// int KEY_TYPES[] = {NUM_KEY, STR_KEY, NUM_KEY, STR_KEY, NUM_KEY, STR_KEY, STR_KEY};
-// char* (*ENC_FUNCS[])(char*, char*) = {SH_encode, PF_encode, RF_encode, VG_encode, AT_encode, CO_encode, SU_encode};
-// char* (*DEC_FUNCS[])(char*, char*) = {SH_decode, PF_decode, RF_decode, VG_decode, AT_decode, CO_decode, SU_decode};
-
-char* CIPHERS[] = {"shift", "playfair", "vigenere", "shuffle", NULL};
-int KEY_TYPES[] = {NUM_KEY, STR_KEY, STR_KEY, STR_KEY};
-char* (*ENC_FUNCS[])(char*, char*) = {SH_encode, PF_encode, VG_encode, SU_encode};
-char* (*DEC_FUNCS[])(char*, char*) = {SH_decode, PF_decode, VG_decode, SU_decode};
+char* CIPHERS[] = {"shift", "playfair", "railfence", "vigenere", "atbash", "columnar", "shuffle", NULL};
+int KEY_TYPES[] = {NUM_KEY, STR_KEY, NUM_KEY, STR_KEY, NUM_KEY, STR_KEY, STR_KEY};
+char* (*ENC_FUNCS[])(char*, char*) = {SH_encode, PF_encode, RF_encode, VG_encode, AT_encode, CO_encode, SU_encode};
+char* (*DEC_FUNCS[])(char*, char*) = {SH_decode, PF_decode, RF_decode, VG_decode, AT_decode, CO_decode, SU_decode};
 
 // Key definitions
 
@@ -50,9 +46,9 @@ char** ZF_key_locs;
 int ZF_key_count;
 int ZF_num_key_count;
 
-char* ZF_num_keys[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", NULL};
+// char* ZF_num_keys[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", NULL};
 
-// char* ZF_num_keys[] = {"3", "4", "5", "12", "11", "2", "6", NULL};
+char* ZF_num_keys[] = {"3", "4", "5", "12", "11", "2", "6", NULL};
 
 // Pointer to input text
 
