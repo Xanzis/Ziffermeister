@@ -129,7 +129,7 @@ float AN_periodicity(char* str, int period) {
 }
 
 float AN_quad(char* str) {
-	AN_CUTOFF = -500.0;
+	AN_CUTOFF = -6.0;
 	float score = 0;
 
 	int a, b, c, d;
@@ -147,5 +147,5 @@ float AN_quad(char* str) {
 		d = *lead - 'a';
 	}
 
-	return score;
+	return score / (float) (strlen(str) - 3);
 }
